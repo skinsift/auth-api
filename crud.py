@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 def generate_user_id(db: Session) -> str:
     # Query the current highest User_ID (assumes it's in format 'USR' followed by digits)
-    last_user = db.query(User).order_by(User.User_ID.desc()).first()
+    last_user = db.query(User).order_by(User.Users_ID.desc()).first()
     
     if last_user:
         # Extract the numeric part of the last User_ID
-        match = re.match(r"USR(\d+)", last_user.User_ID)
+        match = re.match(r"USR(\d+)", last_user.Users_ID)
         if match:
             last_id = int(match.group(1))
             new_id = last_id + 1
@@ -33,13 +33,13 @@ def create_user(db: Session, user_data):
     
     # Create the new user
     new_user = User(
-        User_ID=new_user_id,  # Use the generated User_ID
+        Users_ID=new_user_id,  # Use the generated User_ID
         Username=user_data.Username,
         Password=hashed_password,
-        Email=user_data.Email,
-        Jenis_Kulit=user_data.Jenis_Kulit,
-        Good_Ingre=user_data.Good_Ingre,
-        Bad_Ingre=user_data.Bad_Ingre
+        Email=user_data.Email
+        # Jenis_Kulit=None,  # Dibiarkan kosong
+        # Good_Ingre=None,   # Dibiarkan kosong
+        # Bad_Ingre=None     # Dibiarkan kosong
     )
     
     # Add the user to the database
@@ -47,7 +47,10 @@ def create_user(db: Session, user_data):
     db.commit()
     db.refresh(new_user)
     
-    return new_user
+    return {
+        "message": "User registered successfully",
+        "user_id": new_user.Users_ID
+    }
 
 
 def get_user_by_email(db: Session, email: str):
@@ -59,3 +62,17 @@ def get_user_by_username(db: Session, username: str):
 
 def get_user_by_password(db: Session, password: str):
     return db.query(User).filter(User.Password == password).first()
+
+def update_skin_type(db: Session, users_id: str, jenis_kulit: str):
+    # Mencari pengguna berdasarkan user_id
+    user = db.query(User).filter(User.Users_ID == users_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update jenis kulit
+    user.Jenis_Kulit = jenis_kulit
+    db.commit()
+    db.refresh(user)
+    
+    return user

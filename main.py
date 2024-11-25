@@ -4,8 +4,13 @@ from utils import global_exception_handler, validation_exception_handler
 from database import Base, engine
 from routes import auth
 
-# Inisialisasi aplikasi FastAPI
+
+# Inisialisasi FastAPI
 app = FastAPI()
+
+# @app.get("/")
+# def read_root():
+#     return {"Hello": "World"}
 
 # Buat tabel di database jika belum ada
 Base.metadata.create_all(bind=engine)
