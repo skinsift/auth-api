@@ -56,3 +56,6 @@ def get_user_by_email(db: Session, email: str):
 
 def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.Username == username).first()
+
+def get_user_by_password(db: Session, password: str):
+    return db.query(User).filter(User.Password == password).first()
