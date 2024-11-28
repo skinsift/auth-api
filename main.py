@@ -4,8 +4,6 @@ from utils import global_exception_handler, validation_exception_handler
 from database import Base, engine
 from routes import auth
 
-
-# Inisialisasi FastAPI
 app = FastAPI()
 
 # @app.get("/")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from schemas import UserCreate, LoginSchema, TokenResponse, UpdateSkinType
-from crud import create_user, get_user_by_email, get_user_by_username, update_skin_type
+from schemas import UserCreate, LoginSchema, TokenResponse
+from crud import create_user, get_user_by_email, get_user_by_username
 from database import get_db
 from utils import verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -88,15 +88,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 # User Routes
 # =======================
 
-@router.put("/update-skin-type")
-def update_skin_type_for_user(
-    user_data: UpdateSkinType, 
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    if current_user.Users_ID != user_data.Users_ID:
-        raise HTTPException(status_code=400, detail="You can only update your own skin type.")
+# @router.put("/update-skin-type")
+# def update_skin_type_for_user(
+#     user_data: UpdateSkinType, 
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user)
+# ):
+#     if current_user.Users_ID != user_data.Users_ID:
+#         raise HTTPException(status_code=400, detail="You can only update your own skin type.")
 
-    updated_user = update_skin_type(db, user_data.Users_ID, user_data.jenis_kulit)
+#     updated_user = update_skin_type(db, user_data.Users_ID, user_data.jenis_kulit)
     
-    return {"message": "Jenis kulit updated successfully", "user": updated_user}
+#     return {"message": "Jenis kulit updated successfully", "user": updated_user}

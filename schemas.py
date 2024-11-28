@@ -18,19 +18,19 @@ class TokenResponse(BaseModel):
     token_type: str
     user_id: str
 
-class SkinTypeEnum(str, Enum):
-    Berminyak = "Berminyak"
-    Kering = "Kering"
-    Sensitif = "Sensitif"
-    Normal = "Normal"
+# class SkinTypeEnum(str, Enum):
+#     Berminyak = "Berminyak"
+#     Kering = "Kering"
+#     Sensitif = "Sensitif"
+#     Normal = "Normal"
 
-class UpdateSkinType(BaseModel):
-    Users_ID: str
-    jenis_kulit: SkinTypeEnum 
+# class UpdateSkinType(BaseModel):
+#     Users_ID: str
+#     jenis_kulit: SkinTypeEnum 
 
-    class Config:
-        from_attributes = True
-        allow_population_by_field_name = True
+#     class Config:
+#         from_attributes = True
+#         allow_population_by_field_name = True
 
 # class NoteIngredients(BaseModel):
 #     Jenis_Kulit: Optional[SkinType]
