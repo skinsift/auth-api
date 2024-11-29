@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from models import User
 from utils import hash_password
+from typing import Optional, List, Dict
 
 import re
 from sqlalchemy.orm import Session
@@ -63,16 +64,62 @@ def get_user_by_username(db: Session, username: str):
 def get_user_by_password(db: Session, password: str):
     return db.query(User).filter(User.Password == password).first()
 
-def update_skin_type(db: Session, users_id: str, jenis_kulit: str):
-    # Mencari pengguna berdasarkan user_id
-    user = db.query(User).filter(User.Users_ID == users_id).first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Update jenis kulit
-    user.Jenis_Kulit = jenis_kulit
-    db.commit()
-    db.refresh(user)
-    
-    return user
+def search_ingredients(
+    nama: Optional[str] = None,
+    benefit: Optional[str] = None,
+    kategori: Optional[str] = None
+) -> List[Dict]:
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+
+            query = "SELECT * FROM ingredients WHERE 1=1"
+            params = []
+
+            if nama:
+                query += " AND nama LIKE %s"
+                params.append(f"%{nama}%")
+            if benefit:
+                query += " AND FIND_IN_SET(%s, benefitidn)"
+                params.append(benefit)
+            if kategori:
+                query += " AND FIND_IN_SET(%s, kategoriidn)"
+                params.append(kategori)
+
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+
+            return results
+    except Error as e:
+        raise Exception(f"Database error: {str(e)}")
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+
+            # Query dasar
+            query = "SELECT * FROM ingredients WHERE 1=1"
+            params = []
+
+            # Filter berdasarkan nama
+            if nama:
+                query += " AND nama LIKE %s"
+                params.append(f"%{nama}%")
+
+            # Filter berdasarkan benefit
+            if benefit:
+                query += " AND FIND_IN_SET(%s, benefitidn)"
+                params.append(benefit)
+
+            # Filter berdasarkan kategori
+            if kategori:
+                query += " AND FIND_IN_SET(%s, kategoriidn)"
+                params.append(kategori)
+
+            # Eksekusi query
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+
+            return results
+
+    except Error as e:
+        raise Exception(f"Database error: {str(e)}")

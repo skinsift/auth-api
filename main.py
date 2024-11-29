@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from utils import global_exception_handler, validation_exception_handler
 from database import Base, engine
-from routes import auth
+from routes import auth, search
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ Base.metadata.create_all(bind=engine)
 
 # Tambahkan route autentikasi
 app.include_router(auth.router)
+app.include_router(search.router)
 
 # Tambahkan error handling
 app.add_exception_handler(Exception, global_exception_handler)

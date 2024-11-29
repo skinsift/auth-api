@@ -83,20 +83,3 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
     return user
-
-# =======================
-# User Routes
-# =======================
-
-# @router.put("/update-skin-type")
-# def update_skin_type_for_user(
-#     user_data: UpdateSkinType, 
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(get_current_user)
-# ):
-#     if current_user.Users_ID != user_data.Users_ID:
-#         raise HTTPException(status_code=400, detail="You can only update your own skin type.")
-
-#     updated_user = update_skin_type(db, user_data.Users_ID, user_data.jenis_kulit)
-    
-#     return {"message": "Jenis kulit updated successfully", "user": updated_user}

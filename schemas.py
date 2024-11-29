@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, constr
 from enum import Enum
+from typing import Optional
 
 class UserCreate(BaseModel):
     Username: constr(min_length=3, max_length=100)
@@ -17,6 +18,19 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user_id: str
+
+class Ingredient(BaseModel):
+    Id_Ingredients: int
+    nama: str
+    rating: Optional[float]
+    deskripsiidn: Optional[str]
+    benefitidn: Optional[str]
+    kategoriidn: Optional[str]
+
+class search_ingredients(BaseModel):
+    nama: Optional[str] = None
+    benefitidn: Optional[str] = None
+    kategoriidn: Optional[str] = None
 
 # class SkinTypeEnum(str, Enum):
 #     Berminyak = "Berminyak"
