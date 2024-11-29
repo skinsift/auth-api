@@ -3,7 +3,7 @@ from fastapi import FastAPI, APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import logging
-from schemas import search_ingredients
+from schemas import search_ingredients, IngredientResponse
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,14 +18,14 @@ db_config = {
 }
 
 # Pydantic model untuk response
-class IngredientResponse(BaseModel):
-    Id_Ingredients: int
-    nama: str
-    rating: Optional[str]
-    deskripsiidn: Optional[str]
-    benefitidn: Optional[str]
-    kategoriidn: Optional[str]
-    keyidn: Optional[str]
+# class IngredientResponse(BaseModel):
+#     Id_Ingredients: int
+#     nama: str
+#     rating: Optional[str]
+#     deskripsiidn: Optional[str]
+#     benefitidn: Optional[str]
+#     kategoriidn: Optional[str]
+#     keyidn: Optional[str]
 
 @router.post("/search/ingredients", response_model=List[IngredientResponse])
 async def search(request: search_ingredients):
