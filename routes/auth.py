@@ -133,7 +133,7 @@ async def get_user_notes(
 
     return {"notes": response}
 
-@router.post("/user/notes/add")
+@router.post("/user/notes")
 async def add_user_note(
     request: AddNoteRequest,
     current_user: User = Depends(get_current_user),
@@ -171,7 +171,7 @@ async def add_user_note(
     return {"message": f"Ingredient with Id_Ingredients {request.Id_Ingredients} added to {request.preference} list"}
 
 
-@router.delete("/user/notes/remove")
+@router.delete("/user/notes")
 async def remove_user_note(
     request: AddNoteRequest,
     current_user: User = Depends(get_current_user),
