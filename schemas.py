@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, constr
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 class UserCreate(BaseModel):
     Username: constr(min_length=3, max_length=100)
@@ -25,7 +25,7 @@ class IngredientResponse(BaseModel):
     rating: Optional[str]
     # deskripsiidn: Optional[str]
     # benefitidn: Optional[str]
-    # kategoriidn: Optional[str]
+    kategoriidn: Optional[str]
     # keyidn: Optional[str]
 
 class search_ingredients(BaseModel):
@@ -43,6 +43,21 @@ class IngredientDetailResponse(BaseModel):
     kategoriidn: Optional[str]
     keyidn: Optional[str]
 
+class AddNoteRequest(BaseModel):
+    Id_Ingredients: int
+    preference: str  # "good" atau "bad"
+
+class NoteDetail(BaseModel):
+    id: int
+    name: str
+    rating: str
+    category: str
+    preference: str
+
+class UserNotesResponse(BaseModel):
+    notes: List[NoteDetail]
+
+
 
 # class SkinTypeEnum(str, Enum):
 #     Berminyak = "Berminyak"
@@ -57,8 +72,3 @@ class IngredientDetailResponse(BaseModel):
 #     class Config:
 #         from_attributes = True
 #         allow_population_by_field_name = True
-
-# class NoteIngredients(BaseModel):
-#     Jenis_Kulit: Optional[SkinType]
-#     Good_Ingre: Optional[str]
-#     Bad_Ingre: Optional[str]

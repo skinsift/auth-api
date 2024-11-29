@@ -20,22 +20,46 @@ db_config = {
     'database': 'skinsift_app'  # Ganti dengan nama database Anda
 }
 
+@router.get("/search/ingredients", response_model=List[IngredientResponse])
+async def get_all_ingredients():
+    """Endpoint untuk mendapatkan seluruh data dari tabel ingredients."""
+    query = "SELECT * FROM ingredients"
+
+    try:
+        with mysql.connector.connect(**db_config) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = cursor.fetchall()
+
+                response = [
+                    IngredientResponse(
+                        Id_Ingredients=row[0],
+                        nama=row[1],
+                        rating=row[2],
+                        deskripsiidn=row[3],
+                        benefitidn=row[4],
+                        kategoriidn=row[5],
+                        keyidn=row[6]
+                    )
+                    for row in result
+                ]
+
+                return response
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"MySQL Error: {str(e)}")
+
 @router.post("/search/ingredients", response_model=List[IngredientResponse])
-async def search(request: search_ingredients):
+async def search_ingredients(request: search_ingredients):
+    """Endpoint untuk mencari data ingredients berdasarkan filter."""
     nama = request.nama
     rating = request.rating
     benefitidn = request.benefitidn
     kategoriidn = request.kategoriidn
 
-    # Query dasar
     query = "SELECT * FROM ingredients WHERE 1=1"
     params = []
 
-    # Jika tidak ada filter, kembalikan semua data
-    if not (nama or benefitidn or kategoriidn):
-        logging.info("No filters applied. Returning all data.")
-
-    # Jika ada filter, tambahkan ke query
     if nama:
         query += " AND nama = %s"
         params.append(nama)
@@ -49,7 +73,6 @@ async def search(request: search_ingredients):
         query += " AND (kategoriidn IS NOT NULL AND kategoriidn LIKE %s)"
         params.append(f"%{kategoriidn}%")
 
-    # Log query dan parameter
     logging.debug(f"Final Query: {query}")
     logging.debug(f"Parameters: {params}")
 
@@ -59,7 +82,6 @@ async def search(request: search_ingredients):
                 cursor.execute(query, tuple(params))
                 result = cursor.fetchall()
 
-                # Format response
                 response = [
                     IngredientResponse(
                         Id_Ingredients=row[0],
@@ -86,7 +108,7 @@ def get_filtered_ingredients(
     # Fetch distinct values for each column
     ratings = db.query(Ingredient.rating).distinct().all()
     raw_benefits = db.query(Ingredient.benefitidn).distinct().all()
-    raw_categories = db.query(Ingredient.kategoriidn).distinct().all()
+    # raw_categories = db.query(Ingredient.kategoriidn).distinct().all()
 
     # Process multivalued fields for benefits and categories
     benefits = set()
@@ -94,16 +116,16 @@ def get_filtered_ingredients(
         if benefit[0]:  # Check if value is not None
             benefits.update(map(str.strip, benefit[0].split(",")))
 
-    categories = set()
-    for category in raw_categories:
-        if category[0]:  # Check if value is not None
-            categories.update(map(str.strip, category[0].split(",")))
+    # categories = set()
+    # for category in raw_categories:
+    #     if category[0]:  # Check if value is not None
+    #         categories.update(map(str.strip, category[0].split(",")))
 
     # Format the results into the desired response structure
     response = [
         {"rating": [r[0] for r in ratings if r[0]]},  # Ensure no None values
         {"benefitidn": list(benefits)},
-        {"kategoriidn": list(categories)},
+        # {"kategoriidn": list(categories)},
     ]
 
     return response
