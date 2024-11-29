@@ -20,6 +20,21 @@ class TokenResponse(BaseModel):
     user_id: str
 
 class IngredientResponse(BaseModel):
+    # Id_Ingredients: int
+    nama: str
+    rating: Optional[str]
+    # deskripsiidn: Optional[str]
+    # benefitidn: Optional[str]
+    # kategoriidn: Optional[str]
+    # keyidn: Optional[str]
+
+class search_ingredients(BaseModel):
+    nama: Optional[str] = None
+    rating: Optional[str] = None
+    benefitidn: Optional[str] = None
+    kategoriidn: Optional[str] = None
+
+class IngredientDetailResponse(BaseModel):
     Id_Ingredients: int
     nama: str
     rating: Optional[str]
@@ -28,15 +43,6 @@ class IngredientResponse(BaseModel):
     kategoriidn: Optional[str]
     keyidn: Optional[str]
 
-class search_ingredients(BaseModel):
-    nama: Optional[str] = None
-    benefitidn: Optional[str] = None
-    kategoriidn: Optional[str] = None
-
-# class filter_ingredients(BaseModel):
-#     rating: str | None = None
-#     benefits: list[str] | None = None
-#     categories: list[str] | None = None
 
 # class SkinTypeEnum(str, Enum):
 #     Berminyak = "Berminyak"
