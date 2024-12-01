@@ -20,7 +20,7 @@ db_config = {
     'database': 'skinsift_app'  # Ganti dengan nama database Anda
 }
 
-@router.get("/search/ingredients", response_model=List[IngredientResponse])
+@router.get("/ingredients", response_model=List[IngredientResponse])
 async def get_all_ingredients():
     """Endpoint untuk mendapatkan seluruh data dari tabel ingredients."""
     query = "SELECT * FROM ingredients"
@@ -49,7 +49,7 @@ async def get_all_ingredients():
     except mysql.connector.Error as e:
         raise HTTPException(status_code=500, detail=f"MySQL Error: {str(e)}")
 
-@router.post("/search/ingredients", response_model=List[IngredientResponse])
+@router.post("/ingredients", response_model=List[IngredientResponse])
 async def search_ingredients(request: search_ingredients):
     """Endpoint untuk mencari data ingredients berdasarkan filter."""
     nama = request.nama
