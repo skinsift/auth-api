@@ -14,10 +14,15 @@ class LoginSchema(BaseModel):
     username_or_email: str
     password: str
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    user_id: str
+class LoginResult(BaseModel):
+    userId: str
+    name: str
+    token: str
+
+class LoginResponse(BaseModel):
+    error: bool
+    message: str
+    loginResult: LoginResult
 
 class IngredientResponse(BaseModel):
     Id_Ingredients: int
@@ -48,10 +53,13 @@ class NoteDetail(BaseModel):
     name: str
     rating: str
     category: str
-    preference: str
+    preference: Optional[str]
 
 class UserNotesResponse(BaseModel):
-    notes: List[NoteDetail]
+    status_code: int
+    message: str
+    error: bool
+    data: Optional[List[NoteDetail]] = None 
 
 class ProductResponse(BaseModel):
     Id_Products: int

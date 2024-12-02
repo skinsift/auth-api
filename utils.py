@@ -82,11 +82,15 @@ async def validation_exception_handler(request: Request, exc):
         content={"detail": exc.errors()},
     )
 
-def create_response(status_code: int, message: str, data: Optional[Any] = None) -> Dict[str, Any]:
-    
+def create_response(
+    status_code: int,
+    message: str,
+    data: Optional[Any] = None,
+    data_key: Optional[str] = None  # Parameter tambahan
+) -> Dict[str, Any]:
     is_error = not (200 <= status_code < 300)
 
-    # Base response structure
+    # Struktur dasar respons
     response = {
         "status_code": status_code,
         "error": is_error,
@@ -94,6 +98,8 @@ def create_response(status_code: int, message: str, data: Optional[Any] = None) 
     }
 
     if data is not None:
-        response["list" if isinstance(data, list) else "data"] = data
+        # Gunakan kunci khusus jika disediakan, default ke "list" atau "data"
+        key = data_key or ("list" if isinstance(data, list) else "data")
+        response[key] = data
 
     return response
