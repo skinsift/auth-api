@@ -23,16 +23,12 @@ class IngredientResponse(BaseModel):
     Id_Ingredients: int
     nama: str
     rating: Optional[str]
-    # deskripsiidn: Optional[str]
-    # benefitidn: Optional[str]
-    kategoriidn: Optional[str]
-    # keyidn: Optional[str]
+    benefitidn: Optional[str] = None
 
 class search_ingredients(BaseModel):
     nama: Optional[str] = None
     rating: Optional[str] = None
     benefitidn: Optional[str] = None
-    kategoriidn: Optional[str] = None
 
 class IngredientDetailResponse(BaseModel):
     Id_Ingredients: int
@@ -60,27 +56,28 @@ class UserNotesResponse(BaseModel):
 class ProductResponse(BaseModel):
     Id_Products: int
     nama_product: str
-    mrek: Optional[str]
+    merk: Optional[str]
     deskripsi: Optional[str]
+    url_gambar: Optional[str]
 
 class search_products(BaseModel):
-    nama_product: Optional[str] = None
-    merk: Optional[str] = None
-    kategori: Optional[str] = None
-    jenis_kulit: Optional[str] = None
+    nama_atau_merk: Optional[str] = None
+    kategori: Optional[List[str]] = None
+    jenis_kulit: Optional[List[str]] = None
 
 class ProductDetailResponse(BaseModel):
     Id_Products: int
     nama_product: str
     merk: Optional[str]
-    jenis: Optional[str]
+    jenis_product: Optional[str]
     kategori: Optional[str]
     jenis_kulit: Optional[str]
-    nama_gambar: Optional[str]
+    url_gambar: Optional[str]
     key_ingredients: Optional[str]
     ingredients: Optional[str]
     deskripsi: Optional[str]
     no_BPOM: Optional[str]
+    kegunaan: Optional[str]
 
 
 # class SkinTypeEnum(str, Enum):

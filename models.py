@@ -44,13 +44,14 @@ class Product(Base):
     __tablename__ = "products"  # Nama tabel di database
 
     Id_Products = Column(Integer, primary_key=True, index=True)
-    nama_products = Column(String, index=True)
     jenis = Column(String, nullable=True)
     kategori = Column(String, nullable=True)
     jenis_kulit = Column(String, nullable=True)
     merk = Column(String, nullable=True)
+    nama_product = Column(String, index=True)
     nama_gambar = Column(String, nullable=True)
     key_ingredients = Column(String, nullable=True)
-    ingredient = Column(String, nullable=True)
+    ingredients = Column(String, nullable=True)
     deskripsi = Column(String, nullable=True)
     no_BPOM = Column(String, nullable=True)
+    kegunaan = Column(String, nullable=True)

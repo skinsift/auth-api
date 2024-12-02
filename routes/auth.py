@@ -7,15 +7,11 @@ from utils import verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from models import User, Ingredient, Notes
 from dotenv import load_dotenv
-from jose import jwt, JWTError  # Pastikan `python-jose` sudah terinstal
 import os
+from utils import get_current_user
 
 # Load .env file
 load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_DAY", "1"))
 
 router = APIRouter()
 
@@ -25,10 +21,6 @@ router = APIRouter()
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    """
-    Register a new user.
-    """
-    # Debugging input user
     print(user.dict())
 
     # Check if email or username is already registered
@@ -48,9 +40,6 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login_user(payload: LoginSchema, db: Session = Depends(get_db)):
-    """
-    Login a user and return an access token.
-    """
     identifier = payload.username_or_email
     user = None
 
@@ -71,43 +60,16 @@ async def login_user(payload: LoginSchema, db: Session = Depends(get_db)):
         "email": user.Email
     }
 
-# OAuth2PasswordBearer dependency
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-# Fungsi untuk memverifikasi token JWT
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
-        print(f"Decoded user_id: {user_id}")  # Debugging output
-        if user_id is None:
-            raise credentials_exception
-        user = db.query(User).filter(User.Users_ID == user_id).first()
-        if user is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    return user
-
 # =======================
 # User Notes Routes
 # =======================
 
-# ====== Endpoint Get Notes ======
 @router.get("/user/notes", response_model=UserNotesResponse)
 async def get_user_notes(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Mendapatkan daftar notes pengguna beserta detail ingredients (nama, rating, kategori)
-    """
-    # Query untuk mengambil notes pengguna beserta detail ingredients
+
     notes_query = (
         db.query(Notes, Ingredient)
         .join(Ingredient, Notes.id_ingredients == Ingredient.Id_Ingredients)
@@ -117,10 +79,7 @@ async def get_user_notes(
     if not notes_query:
         raise HTTPException(status_code=404, detail="No notes found for user")
 
-
-    print(f"Query result: {notes_query}")  # Debugging output
-    
-    # Susun respons
+    print(f"Query result: {notes_query}")  
     response = []
     for notes, ingredient in notes_query:
         response.append({
@@ -139,10 +98,6 @@ async def add_user_note(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Menambahkan catatan ingredient ke tabel notes.
-    """
-    # Verifikasi bahwa preference valid
     if request.preference not in ["Suka", "Tidak Suka"]:
         raise HTTPException(status_code=400, detail="Preference must be 'Suka' or 'Tidak Suka'")
 
@@ -186,7 +141,7 @@ async def remove_user_note(
         Notes.id_ingredients == request.Id_Ingredients
     ).first()
     if not note:
-        raise HTTPException(status_code=404, detail="Note not found")
+        raise HTTPException(status_code=200, detail="Note not found")
 
     # Hapus catatan
     db.delete(note)
