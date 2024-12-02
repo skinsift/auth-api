@@ -10,18 +10,19 @@ from sqlalchemy.orm import Session
 from utils import get_current_user, create_response
 from models import User
 from fastapi.responses import JSONResponse
+from sqlalchemy import or_, and_
 
 logging.basicConfig(level=logging.DEBUG)
 
 router = APIRouter()
 
 # Konfigurasi koneksi database
-db_config = {
-    'host': 'localhost',
-    'user': 'root',  # Ganti dengan username MySQL Anda
-    'password': '',  # Ganti dengan password MySQL Anda
-    'database': 'skinsift_app'  # Ganti dengan nama database Anda
-}
+# db_config = {
+#     'host': 'localhost',
+#     'user': 'root',  # Ganti dengan username MySQL Anda
+#     'password': '',  # Ganti dengan password MySQL Anda
+#     'database': 'skinsift_app'  # Ganti dengan nama database Anda
+# }
 
 @router.get("/ingredient", response_model=Dict[str, Any])
 async def get_all_ingredients(
@@ -81,11 +82,17 @@ async def search_ingredients(
         # Membuat filter dinamis untuk query
         filters = []
         if request.nama:
-            filters.append(Ingredient.nama == request.nama)
+            filters.append(Ingredient.nama.ilike(f"%{request.nama}%"))
         if request.rating:
-            filters.append(Ingredient.rating == request.rating)
+            rating_filter = or_(*[Ingredient.rating == rat for rat in request.rating])
+            filters.append(rating_filter)
+
+        # Filter untuk benefitidn menggunakan and_
         if request.benefitidn:
-            filters.append(Ingredient.benefitidn.like(f"%{request.benefitidn}%"))
+            benefit_filters = and_(
+                *[Ingredient.benefitidn.ilike(f"%{ben}%") for ben in request.benefitidn]
+            )
+            filters.append(benefit_filters)
 
         # Eksekusi query dengan filter
         ingredients = db.query(Ingredient).filter(*filters).all()
@@ -172,7 +179,7 @@ async def get_ingredient_detail(
             content=create_response(500, f"Database Error: {str(e)}")
         )
 
-@router.get("/ingredients/filter")
+@router.get("/ingredient/filter")
 async def get_filtered_ingredients(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

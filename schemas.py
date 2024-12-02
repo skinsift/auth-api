@@ -27,8 +27,8 @@ class IngredientResponse(BaseModel):
 
 class search_ingredients(BaseModel):
     nama: Optional[str] = None
-    rating: Optional[str] = None
-    benefitidn: Optional[str] = None
+    rating: Optional[List[str]] = None
+    benefitidn: Optional[List[str]] = None
 
 class IngredientDetailResponse(BaseModel):
     Id_Ingredients: int
