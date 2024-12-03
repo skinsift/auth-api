@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, Body
 from sqlalchemy.orm import Session
-from schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse, DeleteAccountRequest, UpdateAccountRequest
+from schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse, DeleteAccountRequest, UpdateAccountRequest, DeleteNoteRequest
 from crud import create_user, get_user_by_email, get_user_by_username
 from database import get_db
 from utils import verify_password, create_access_token, create_response, hash_password, generate_unique_id
@@ -25,17 +25,24 @@ router = APIRouter()
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    
+
     # Debugging untuk melihat data user yang diterima
     print(user.dict())
-
-    #import re
 
     # Validasi tambahan untuk format Username dan Password
     username_regex = r"^[a-zA-Z0-9_]+$"  # Hanya huruf, angka, dan underscore
     password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$"  # Min 6 karakter, ada huruf & angka
 
     error_messages = []
+
+    # Validasi panjang Username tidak boleh kurang dari 3 karakter
+    if len(user.Username) < 3:
+        error_messages.append({
+            "type": "string_too_short",
+            "loc": ["body", "Username"],
+            "msg": "Username must be at least 3 characters long.",
+            "input": user.Username
+        })
 
     # Validasi format Username
     if not re.match(username_regex, user.Username):
@@ -51,11 +58,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         error_messages.append({
             "type": "string_too_short",
             "loc": ["body", "Password"],
-            "msg": "String should have at least 6 characters",
-            "input": user.Password,
-            "ctx": {
-                "min_length": 6
-            }
+            "msg": "Password should have at least 6 characters",
+            "input": user.Password
         })
         
     # Validasi format Password
@@ -75,25 +79,24 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         error_messages.append({
             "type": "value_error.email_taken",
             "loc": ["body", "Email"],
-            "msg": "Email already registered",
+            "msg": "Email or Username is already registered.",
             "input": user.Email
         })
     if existing_username:
         error_messages.append({
             "type": "value_error.username_taken",
             "loc": ["body", "Username"],
-            "msg": "Username already registered",
+            "msg": "Email or Username is already registered.",
             "input": user.Username
         })
 
-    # Jika ada kesalahan, kembalikan dengan status 400
+    # Jika ada kesalahan, kembalikan dengan status 422
     if error_messages:
         return create_response(
-        status_code=422,
-        message="Registration failed due to errors",
-        data={"errors": error_messages},
-    )
-
+            status_code=422,
+            message="Registration failed due to errors",
+            data={"errors": [{"msg": e["msg"]} for e in error_messages]},  # Hanya kirimkan pesan kesalahan yang relevan
+        )
 
     # Hash password pengguna
     hashed_password = hash_password(user.Password)
@@ -118,48 +121,76 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         },
     )
 
+
+from fastapi.responses import JSONResponse
+from fastapi import HTTPException
+
 @router.post("/login", response_model=LoginResponse)
 async def login_user(payload: LoginSchema, db: Session = Depends(get_db)):
     identifier = payload.username_or_email
     user = None
 
-    # Identifikasi apakah menggunakan email atau username
+    # Mengidentifikasi apakah menggunakan email atau username
     if "@" in identifier:
-        user = get_user_by_email(db, identifier)
+        user = get_user_by_email(db, identifier)  # Mencari user berdasarkan email
     else:
-        user = get_user_by_username(db, identifier)
+        user = get_user_by_username(db, identifier)  # Mencari user berdasarkan username
 
-    # Verifikasi kredensial
-    if not user or not verify_password(payload.password, user.Password):
-        # Gunakan create_response untuk error 400
-        return create_response(
-            status_code=400,
-            message="Invalid credentials",
-            data=None
+    # Skema 1: Username tidak ditemukan
+    if not user:
+        # Gunakan create_response untuk error 404, pastikan loginResult ada sebagai None
+        response_data = create_response(
+            status_code=404,
+            message="Username not found",
+            data=None,
+            data_key="loginResult"
         )
 
-    # Buat token akses
-    access_token = create_access_token(data={"user_id": user.Users_ID})
+        # Menggunakan JSONResponse dengan format dict() untuk memastikan struktur valid
+        return JSONResponse(
+            status_code=response_data["status_code"],
+            content=dict(response_data, loginResult=None)  # Pastikan loginResult ada meski None
+        )
 
-    # Struktur login result yang sesuai
+    # Skema 2: Password salah
+    if not verify_password(payload.password, user.Password):  # Verifikasi password
+        # Gunakan create_response untuk error 400, pastikan loginResult ada sebagai None
+        response_data = create_response(
+            status_code=400,
+            message="Incorrect password",
+            data=None,
+            data_key="loginResult"
+        )
+
+        # Menggunakan JSONResponse dengan format dict() untuk memastikan struktur valid
+        return JSONResponse(
+            status_code=response_data["status_code"],
+            content=dict(response_data, loginResult=None)  # Pastikan loginResult ada meski None
+        )
+
+    # Skema 3: Berhasil login
+    access_token = create_access_token(data={"user_id": user.Users_ID})  # Membuat token akses
+
+    # Struktur loginResult yang sesuai
     login_result = {
-        "userId": user.Users_ID,  # Menggunakan userId sesuai format yang diminta
-        "name": user.Username,    # Menggunakan Username atau nama pengguna yang sesuai
-        "token": access_token     # Menambahkan token akses
+        "userId": user.Users_ID,
+        "name": user.Username,
+        "token": access_token
     }
 
-    # Kembalikan respons dengan create_response untuk 200
-    response = create_response(
+    # Gunakan create_response untuk sukses, pastikan loginResult ada dalam data
+    response_data = create_response(
         status_code=200,
-        message="success",
-        data=login_result
+        message="Login successful",
+        data=login_result,  # Menambahkan data loginResult
+        data_key="loginResult"
     )
 
-    # Ganti kunci "data" menjadi "loginResult"
-    if "data" in response:
-        response["loginResult"] = response.pop("data")
-
-    return response
+    # Menggunakan JSONResponse dengan format dict() untuk memastikan struktur valid
+    return JSONResponse(
+        status_code=response_data["status_code"],
+        content=dict(response_data, loginResult=login_result)  # Menambahkan loginResult yang benar
+    )
 
 
 @router.put("/update-account")
@@ -383,24 +414,22 @@ async def add_user_note(
 
 
 @router.delete("/user/notes")
-async def remove_user_note(
-    request: AddNoteRequest,
+async def remove_note_by_id(
+    request: DeleteNoteRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
-    """
-    Menghapus catatan ingredient dari tabel notes.
-    """
-    # Cari catatan yang sesuai
+    # Cari catatan berdasarkan id_ingredients dan current_user
     note = db.query(Notes).filter(
-        Notes.users_id == current_user.Users_ID,
-        Notes.id_ingredients == request.Id_Ingredients
+        Notes.id_ingredients == request.Id_Ingredients,
+        Notes.users_id == current_user.Users_ID
     ).first()
+
     if not note:
-        # Menggunakan create_response untuk mengatur respons kesalahan
+        # Jika catatan tidak ditemukan, kirim respons kesalahan
         response = create_response(
             status_code=404,
-            message="Note not found",
+            message=f"Ingredient with Id_Ingredients {request.Id_Ingredients} not found",
             data=None
         )
         return JSONResponse(status_code=404, content=response)
@@ -409,7 +438,7 @@ async def remove_user_note(
     db.delete(note)
     db.commit()
 
-    # Menggunakan create_response untuk membuat respons sukses
+    # Kirim respons sukses
     response = create_response(
         status_code=200,
         message=f"Ingredient with Id_Ingredients {request.Id_Ingredients} removed from notes",

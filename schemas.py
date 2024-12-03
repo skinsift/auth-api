@@ -17,6 +17,7 @@ class LoginResult(BaseModel):
     token: str
 
 class LoginResponse(BaseModel):
+    status_code: int
     error: bool
     message: str
     loginResult: LoginResult
@@ -53,6 +54,9 @@ class AddNoteRequest(BaseModel):
     Id_Ingredients: int
     preference: str  # "good" atau "bad"
 
+class DeleteNoteRequest(BaseModel):
+    Id_Ingredients: int
+    
 class NoteDetail(BaseModel):
     id: int
     name: str

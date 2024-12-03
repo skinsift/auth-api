@@ -16,14 +16,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 router = APIRouter()
 
-# Konfigurasi koneksi database
-# db_config = {
-#     'host': 'localhost',
-#     'user': 'root',  # Ganti dengan username MySQL Anda
-#     'password': '',  # Ganti dengan password MySQL Anda
-#     'database': 'skinsift_app'  # Ganti dengan nama database Anda
-# }
-
 @router.get("/ingredient", response_model=Dict[str, Any])
 async def get_all_ingredients(
     current_user: User = Depends(get_current_user),

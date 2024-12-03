@@ -17,7 +17,7 @@ router = APIRouter()
 CLOUD_BUCKET_BASE_URL = "https://storage.googleapis.com/skinsift/products/"
 
 # === Endpoint untuk mendapatkan seluruh data produk ===
-@router.get("/products", response_model=Dict[str, Any])
+@router.get("/product", response_model=Dict[str, Any])
 async def get_all_products(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -67,7 +67,7 @@ async def get_all_products(
 
 
 # === Endpoint untuk mencari produk berdasarkan filter ===
-@router.post("/products/search", response_model=Dict[str, Any])
+@router.post("/product/search", response_model=Dict[str, Any])
 async def search_products(
     request: search_products,  # Pastikan ini adalah Pydantic model
     current_user: User = Depends(get_current_user),
@@ -136,7 +136,7 @@ async def search_products(
         )
 
 # === Endpoint untuk mendapatkan detail produk ===
-@router.get("/products/detail/{id_product}", response_model=Dict[str, Any])
+@router.get("/product/detail/{id_product}", response_model=Dict[str, Any])
 async def get_product_detail(
     id_product: int,
     current_user: User = Depends(get_current_user),
@@ -189,7 +189,7 @@ async def get_product_detail(
             content=create_response(500, f"MySQL Error: {str(e)}")
         )
 
-@router.get("/products/filter")
+@router.get("/product/filter")
 async def get_filtered_products(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

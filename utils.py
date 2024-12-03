@@ -5,39 +5,45 @@ import jwt
 import os
 from datetime import datetime, timedelta
 import logging
-from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from database import get_db
 from sqlalchemy.orm import Session
 from models import User
 from jose import jwt, JWTError
-import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
+from google.cloud import secretmanager
 
-# Load file .env
-load_dotenv()
+secret_client = secretmanager.SecretManagerServiceClient()
 
-# Ambil nilai dari .env
-SECRET_KEY = os.getenv("SECRET_KEY")
-ACCESS_TOKEN_EXPIRE_DAYS = os.getenv("ACCESS_TOKEN_EXPIRE_DAYS", "15")  # Default sebagai string "15"
-ALGORITHM = os.getenv("ALGORITHM", "HS256")  # Default ke HS256 jika tidak ada
+def access_secret_version(secret_id: str, version_id: str = "latest") -> str:
 
-# Pastikan nilai ACCESS_TOKEN_EXPIRE_MINUTES dikonversi ke integer dengan aman
+    try:
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        secret_name = f"projects/{'skinsift-2024'}/secrets/{secret_id}/versions/{version_id}"
+        response = secret_client.access_secret_version(name=secret_name)
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        logging.error(f"Error accessing secret {secret_id}: {e}")
+        raise
+
+# Load secrets dari Secret Manager
 try:
-    ACCESS_TOKEN_EXPIRE_DAYS = int(ACCESS_TOKEN_EXPIRE_DAYS)
-except ValueError:
-    raise ValueError("ACCESS_TOKEN_EXPIRE_DAY harus berupa angka valid dalam file .env")
+    SECRET_KEY = access_secret_version("secret_key")
+    ACCESS_TOKEN_EXPIRE_DAYS = int(access_secret_version("ACCESS_TOKEN_EXPIRE_DAYS"))
+    ALGORITHM = access_secret_version("ALGORITHM")
+except Exception as e:
+    raise ValueError("Error loading secrets: " + str(e))
 
 def create_access_token(data: dict):
     """
     Membuat JWT access token dengan expiration.
     """
     to_encode = data.copy()
-    expire = datetime.datetime.utcnow() + datetime.timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})  # Tambahkan waktu expire ke payload
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
 
 # OAuth2PasswordBearer dependency
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
