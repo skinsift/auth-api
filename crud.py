@@ -25,33 +25,19 @@ def generate_user_id(db: Session) -> str:
     # Return the new User_ID in the 'USR12345' format
     return f"USR{new_id:05d}"  # Formats the ID as 'USR00001', 'USR00002', etc.
 
-def create_user(db: Session, user_data):
-    # Generate a new user ID
-    new_user_id = generate_user_id(db)
+def create_user(db: Session, user_data: dict) -> User:
+    # Generate a unique User_ID before creating the user
+    user_data['Users_ID'] = generate_user_id(db)
     
-    # Hash the password
-    hashed_password = hash_password(user_data.Password)
+    # Create the new user with the provided data
+    new_user = User(**user_data)
     
-    # Create the new user
-    new_user = User(
-        Users_ID=new_user_id,  # Use the generated User_ID
-        Username=user_data.Username,
-        Password=hashed_password,
-        Email=user_data.Email
-        # Jenis_Kulit=None,  # Dibiarkan kosong
-        # Good_Ingre=None,   # Dibiarkan kosong
-        # Bad_Ingre=None     # Dibiarkan kosong
-    )
-    
-    # Add the user to the database
+    # Add the user to the session and commit the transaction
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     
-    return {
-        "message": "User registered successfully",
-        "user_id": new_user.Users_ID
-    }
+    return new_user
 
 
 def get_user_by_email(db: Session, email: str):

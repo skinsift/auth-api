@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form, Body
 from sqlalchemy.orm import Session
-from schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse
+from schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse, DeleteAccountRequest, UpdateAccountRequest
 from crud import create_user, get_user_by_email, get_user_by_username
 from database import get_db
-from utils import verify_password, create_access_token, create_response
+from utils import verify_password, create_access_token, create_response, hash_password, generate_unique_id
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from models import User, Ingredient, Notes
 from dotenv import load_dotenv
-import os
+import os, re
 from utils import get_current_user, create_response
 from typing import List, Optional, Dict, Any
 from fastapi.responses import JSONResponse
@@ -25,34 +25,97 @@ router = APIRouter()
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
+    
     # Debugging untuk melihat data user yang diterima
     print(user.dict())
+
+    #import re
+
+    # Validasi tambahan untuk format Username dan Password
+    username_regex = r"^[a-zA-Z0-9_]+$"  # Hanya huruf, angka, dan underscore
+    password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$"  # Min 6 karakter, ada huruf & angka
+
+    error_messages = []
+
+    # Validasi format Username
+    if not re.match(username_regex, user.Username):
+        error_messages.append({
+            "type": "string_pattern_mismatch",
+            "loc": ["body", "Username"],
+            "msg": "Username can only contain letters, numbers, and underscores.",
+            "input": user.Username
+        })
+
+    # Validasi panjang Password
+    if len(user.Password) < 6:
+        error_messages.append({
+            "type": "string_too_short",
+            "loc": ["body", "Password"],
+            "msg": "String should have at least 6 characters",
+            "input": user.Password,
+            "ctx": {
+                "min_length": 6
+            }
+        })
+        
+    # Validasi format Password
+    elif not re.match(password_regex, user.Password):
+        error_messages.append({
+            "type": "string_pattern_mismatch",
+            "loc": ["body", "Password"],
+            "msg": "Password must be at least 6 characters long and include both letters and numbers.",
+            "input": user.Password
+        })
 
     # Periksa apakah email atau username sudah terdaftar
     existing_email = get_user_by_email(db, user.Email)
     existing_username = get_user_by_username(db, user.Username)
 
-    error_messages: List[str] = []
     if existing_email:
-        error_messages.append("Email already registered")
+        error_messages.append({
+            "type": "value_error.email_taken",
+            "loc": ["body", "Email"],
+            "msg": "Email already registered",
+            "input": user.Email
+        })
     if existing_username:
-        error_messages.append("Username already registered")
+        error_messages.append({
+            "type": "value_error.username_taken",
+            "loc": ["body", "Username"],
+            "msg": "Username already registered",
+            "input": user.Username
+        })
 
     # Jika ada kesalahan, kembalikan dengan status 400
     if error_messages:
         return create_response(
-            status_code=400,
-            message="Registration failed due to errors",
-            data={"errors": error_messages},
-        )
+        status_code=422,
+        message="Registration failed due to errors",
+        data={"errors": error_messages},
+    )
+
+
+    # Hash password pengguna
+    hashed_password = hash_password(user.Password)
 
     # Buat pengguna baru
-    new_user = create_user(db, user)
+    new_user = create_user(db, {
+        "Users_ID": generate_unique_id(),
+        "Username": user.Username,
+        "Password": hashed_password,
+        "Email": user.Email,
+    })
 
     # Respons sukses
     return create_response(
         status_code=201,
         message="User registered successfully",
+        data={
+            "user_id": new_user.Users_ID,
+            "username": new_user.Username,
+            "email": new_user.Email,
+            "created_at": new_user.created_at,  # Sertakan waktu pembuatan
+        },
     )
 
 @router.post("/login", response_model=LoginResponse)
@@ -97,6 +160,121 @@ async def login_user(payload: LoginSchema, db: Session = Depends(get_db)):
         response["loginResult"] = response.pop("data")
 
     return response
+
+
+@router.put("/update-account")
+def update_account(
+    payload: Dict[str, Any] = Body(..., description="Payload for account update"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+
+    current_password = payload.get("current_password")
+    new_password = payload.get("new_password")
+    new_email = payload.get("new_email")
+
+    # Validasi keberadaan current_password
+    if not current_password:
+        return JSONResponse(
+            status_code=400,
+            content=create_response(
+                status_code=400,
+                message="Field 'current_password' is required."
+            )
+        )
+
+    # Validasi password lama
+    if not verify_password(current_password, current_user.Password):
+        return JSONResponse(
+            status_code=403,
+            content=create_response(
+                status_code=403,
+                message="Invalid current password."
+            )
+        )
+
+    # Pastikan setidaknya satu dari new_password atau new_email diberikan
+    if not new_password and not new_email:
+        return JSONResponse(
+            status_code=400,
+            content=create_response(
+                status_code=400,
+                message="Please provide at least one field to update: 'new_password' or 'new_email'."
+            )
+        )
+
+    # Perbarui password jika diberikan
+    if new_password:
+        password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$"
+        if not re.match(password_regex, new_password):
+            return JSONResponse(
+                status_code=400,
+                content=create_response(
+                    status_code=400,
+                    message="Password must be at least 6 characters long and include both letters and numbers."
+                )
+            )
+        current_user.Password = hash_password(new_password)
+
+    # Perbarui email jika diberikan
+    if new_email:
+        if db.query(User).filter(User.Email == new_email).first():
+            return JSONResponse(
+                status_code=400,
+                content=create_response(
+                    status_code=400,
+                    message="Email already registered."
+                )
+            )
+        current_user.Email = new_email
+
+    # Commit perubahan
+    db.commit()
+    db.refresh(current_user)
+
+    return JSONResponse(
+        status_code=200,
+        content=create_response(
+            status_code=200,
+            message="Account updated successfully.",
+            data={
+                "user_id": current_user.Users_ID,
+                "username": current_user.Username,
+                "email": current_user.Email,
+            }
+        )
+    )
+
+@router.delete("/delete-account")
+def delete_account(
+    request: DeleteAccountRequest, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Cek apakah pengguna ada
+    user = db.query(User).filter(User.Users_ID == current_user.Users_ID).first()
+    if not user:
+        return create_response(
+            status_code=404,
+            message="User not found",
+        )
+
+    # Validasi password
+    if not verify_password(request.password, user.Password):
+        return create_response(
+            status_code=403,
+            message="Invalid password",
+        )
+
+    # Hapus akun
+    db.delete(user)
+    db.commit()
+
+    return create_response(
+        status_code=200,
+        message="Account deleted successfully",
+        data={"user_id": user.Users_ID},  # Mengembalikan user ID yang benar
+    )
 
 
 # =======================

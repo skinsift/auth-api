@@ -42,6 +42,12 @@ def create_access_token(data: dict):
 # OAuth2PasswordBearer dependency
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+import uuid
+
+def generate_unique_id() -> str:
+    return uuid.uuid4().hex[:16]  # Mengambil 16 karakter pertama dari UUID
+
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=401,

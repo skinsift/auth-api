@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, ForeignKey, Enum, TIMESTAMP
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 # from base import Base  # Ganti `base` dengan file tempat Base Anda didefinisikan
@@ -22,6 +23,8 @@ class User(Base):
     Username = Column(String(1000), unique=True, nullable=False)
     Password = Column(String(1000), nullable=False)
     Email = Column(String(1000), unique=True, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationship
     notes = relationship("Notes", back_populates="user")
