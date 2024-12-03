@@ -6,9 +6,9 @@ import os
 from datetime import datetime, timedelta
 import logging
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from database import get_db
+from src.database import get_db
 from sqlalchemy.orm import Session
-from models import User
+from src.models import User
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional

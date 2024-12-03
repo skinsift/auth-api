@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 import mysql.connector
-from database import get_db
-from schemas import ProductResponse, search_products, ProductDetailResponse
-from models import Product
-from utils import get_current_user,  create_response
-from models import User
+from src.database import get_db
+from src.schemas import ProductResponse, search_products, ProductDetailResponse
+from src.models import Product
+from src.utils import get_current_user,  create_response
+from src.models import User
 from fastapi.responses import JSONResponse
 from sqlalchemy import or_
 

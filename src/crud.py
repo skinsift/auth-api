@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import User
-from utils import hash_password
+from src.models import User
+from src.utils import hash_password
 from typing import Optional, List, Dict
 
 import re
