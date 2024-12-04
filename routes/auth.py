@@ -74,27 +74,23 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     existing_email = get_user_by_email(db, user.Email)
     existing_username = get_user_by_username(db, user.Username)
 
-    if existing_email:
-        error_messages.append({
-            "type": "value_error.email_taken",
-            "loc": ["body", "Email"],
-            "msg": "Email or Username is already registered.",
-            "input": user.Email
-        })
-    if existing_username:
-        error_messages.append({
-            "type": "value_error.username_taken",
-            "loc": ["body", "Username"],
-            "msg": "Email or Username is already registered.",
-            "input": user.Username
-        })
+    error_messages = []
+
+    if existing_email and existing_username:
+        # Jika keduanya sudah terdaftar
+        error_messages.append("Email & Username is already registered")
+    else:
+        if existing_email:
+            error_messages.append("Email is already registered")
+        if existing_username:
+            error_messages.append("Username is already registered")
 
     # Jika ada kesalahan, kembalikan dengan status 422
     if error_messages:
         return create_response(
             status_code=422,
-            message="Registration failed due to errors",
-            data={"errors": [{"msg": e["msg"]} for e in error_messages]},  # Hanya kirimkan pesan kesalahan yang relevan
+            message=error_messages[0],  # Karena hanya ada satu pesan dalam kondisi ini
+            data=None,  # Kosongkan data jika tidak digunakan
         )
 
     # Hash password pengguna
