@@ -1,4 +1,5 @@
-import uvicorn  # Tambahkan impor untuk Uvicorn
+import uvicorn
+import os  # Impor os untuk mengambil variabel lingkungan
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.engine import Connection
@@ -6,11 +7,9 @@ from sqlalchemy import text
 from src.utils import global_exception_handler, validation_exception_handler
 from src.database import Base, engine
 from src.routes import auth, search_ingredients, product
-# from connect import get_db_connection
 
 # Inisialisasi aplikasi FastAPI
 app = FastAPI()
-
 
 # Membuat tabel jika belum ada
 Base.metadata.create_all(bind=engine)
@@ -24,6 +23,7 @@ app.include_router(product.router)
 app.add_exception_handler(Exception, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-# Menjalankan server saat file dieksekusi langsung
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+if __name__ == "__main__":
+    # Cloud Run akan mengatur PORT, jadi cukup gunakan os.getenv untuk mengambilnya
+    port = int(os.getenv("PORT", 8080))  # Jika tidak ada PORT, gunakan 8080 sebagai fallback
+    uvicorn.run("src.main:app", host="0.0.0.0", port=port)
