@@ -1,16 +1,18 @@
-# Gunakan image Python slim
-FROM python:3.10-slim
+# Python image to use.
+FROM python:3.10
 
-# Set environment variable untuk Python
-ENV PYTHONUNBUFFERED True
-
-# Set working directory
+# Set the working directory to /app
 WORKDIR /app
 
-# Salin file proyek ke dalam container
-COPY . /app
+# copy the requirements file used for dependencies
+COPY requirements.txt .
 
-# Install dependensi
-RUN pip install --no-cache-dir -r requirements.txt
-# Tentukan perintah untuk menjalankan aplikasi
-CMD ["fastapi", "dev", "main.py"]
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Copy the rest of the working directory contents into the container at /app
+COPY . .
+
+# Run main.py when the container launches
+# CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+ENTRYPOINT ["python3", "main.py"]
