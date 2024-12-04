@@ -3,12 +3,12 @@ import logging
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from src.schemas import search_ingredients, IngredientResponse, IngredientDetailResponse
-from src.models import Ingredient
-from src.database import get_db
+from schemas import search_ingredients, IngredientResponse, IngredientDetailResponse
+from models import Ingredient
+from database import get_db
 from sqlalchemy.orm import Session
-from src.utils import get_current_user, create_response
-from src.models import User
+from utils import get_current_user, create_response
+from models import User
 from fastapi.responses import JSONResponse
 from sqlalchemy import or_, and_
 

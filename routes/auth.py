@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, Body
 from sqlalchemy.orm import Session
-from src.schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse, DeleteAccountRequest, UpdateAccountRequest, DeleteNoteRequest
-from src.crud import create_user, get_user_by_email, get_user_by_username
-from src.database import get_db
-from src.utils import verify_password, create_access_token, hash_password, generate_unique_id, get_current_user, create_response
+from schemas import UserCreate, LoginSchema, LoginResult, LoginResponse, AddNoteRequest, NoteDetail, UserNotesResponse, IngredientDetailResponse, DeleteAccountRequest, UpdateAccountRequest, DeleteNoteRequest
+from crud import create_user, get_user_by_email, get_user_by_username
+from database import get_db
+from utils import verify_password, create_access_token, hash_password, generate_unique_id, get_current_user, create_response
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from src.models import User, Ingredient, Notes
+from models import User, Ingredient, Notes
 from dotenv import load_dotenv
 import os, re
 from typing import List, Optional, Dict, Any

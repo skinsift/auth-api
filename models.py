@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, TIMESTAMP
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from src.database import Base
+from database import Base
 # from base import Base  # Ganti `base` dengan file tempat Base Anda didefinisikan
 
 class Notes(Base):
