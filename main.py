@@ -1,9 +1,7 @@
 import uvicorn
 import os  # Impor os untuk mengambil variabel lingkungan
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from utils import global_exception_handler, validation_exception_handler
 from database import Base, engine
 from routes import auth, search_ingredients, product
