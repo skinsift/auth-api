@@ -19,23 +19,30 @@ The complete API documentation can be accessed through the following [this link]
 
 ---
 
+# System Requirements  
+- Python 3.8 or later  
+- Docker (for containerized deployment)  
+- Google Cloud SDK (for deployment to Google Cloud Run)  
+---
 # Preparation and Prerequisites
 
- Create Google Cloud Project
-- Open [Google Cloud Console](https://console.cloud.google.com) and create a new project or use an existing one for Firebase.
+1. **Google Cloud Project**  
+   - Create or select an existing project in the [Google Cloud Console](https://console.cloud.google.com).  
 
- Firebase Service Account
-- **Generate Service Account**: In Firebase Console, go to Project Settings > Service Accounts, create a service account, and store the key in Secret Manager as `firebase_sak`.
+2. **Google Cloud Secret Manager**  
+   - Store sensitive data like `jwt_secret_key`, `database_url`, and `gcs_service_account_key` in Google Cloud Secret Manager.  
 
- Firebase Configuration
-- **Web App Configuration**: In Firebase Console, create a web app, then copy the `firebaseConfig` and modify it to include `"databaseURL": ""`.
-- Save the modified config in Secret Manager as `firebase_config`.
+3. **Database Setup**  
+   - Set up your database (SQLite, PostgreSQL, or MySQL) and note the connection string.  
 
- Cloud Storage Service Account
-- Create a service account for Cloud Storage and store the key in Secret Manager as `skinsift-user-profile_bucket_sak`.
+4. **Environment Variables**  
+   - Create a `.env` file in your project directory with the following variables:  
+     ```dotenv  
+     JWT_SECRET_KEY=your_secret_key  
+     DATABASE_URL=your_database_url  
+     GCS_SERVICE_ACCOUNT_KEY=path_to_your_service_account_key.json  
+     ```  
 
- Create Storage Bucket
-- Set up a public bucket and grant the service account the **Storage Admin** role.
 
 ## Code Setup (Local Development)
 
@@ -54,44 +61,6 @@ The complete API documentation can be accessed through the following [this link]
      gcloud auth application-default login
      ```
 
-# Local Development Setup without Secret Manager
-
-If you prefer not to use a secret manager for local development, follow these steps:
-
- 1: Adding Firebase Service Account
-
-  1. Download the Firebase Service Account Key (JSON file) and place it in the same directory as your main Python file.
-  2. Define the path to the Firebase Service Account file in your code:
-   ```python
-   firebase_sak_path = 'your_firebase_sak_file.json'  # Replace with your actual file name
- 2. Updating Firebase Configuration
-Replace the firebaseConfig variable with the Firebase configuration values directly in your code:
-```python
-firebaseConfig = {
-    "apiKey": "yourAPIkey",
-    "authDomain": "XXXX.firebaseapp.com",
-    "projectId": "xxxxxxxxx",
-    "storageBucket": "xxxxxxxx",
-    "messagingSenderId": "xxxxxxxxxx",
-    "appId": "xxxxxxxxxx",
-    "databaseURL": ""
-}
-```
----
- 3. Adding Cloud Storage Service Account
-Place the Cloud Storage Service Account Key (JSON file) in the same folder as the main Python file.
-Define the path to the Cloud Storage Service Account file in your code:
-```python
-key = 'your_bucket_service_account_key.json'  # Update with the actual file name
-```
-
- 4. Code Adjustments
-- Update your code to use the defined firebaseSak and key variables for Firebase and Cloud Storage interactions.
-
-Important Notes
-Security Risk: This approach is not secure because it stores sensitive keys and configurations directly in the code. Avoid using this method in production environments.
-Best Practices: Always use secure methods like Google Cloud Secret Manager or environment variables for managing sensitive data.
-
 # Running the Application Locally
 ---
 1. Cloning the Repository
@@ -107,31 +76,19 @@ Install the required dependencies using pip:
 ```
 pip install -r requirements.txt
 ```
-3. Modifying Access to Secret Manager
-- Open the `main.py` file
-- Locate the following sections:
-``` python
-firebaseSak = access_secret_version('YOUR_PROJECT_ID', 'firebase_sak', '1')
-firebaseConfig = access_secret_version('YOUR_PROJECT_ID', 'firebase_config', '1')
-key = access_secret_version('YOUR_PROJECT_ID', 'scancare-user-profile_bucket_sak', '1')
-Replace YOUR_PROJECT_ID with your Google Cloud project ID.
-```
-4. Running the FastAPI Application
+3. Running the FastAPI Application
 Update the run configuration in `main.py`:
 ``` python
 port = int(os.environ.get('PORT', 8000))  # Use any desired port number
 print(f"Listening to http://localhost:{port}")
 uvicorn.run(app, host='localhost', port=port)
 ```
-5. Start the local server using the following command:
+4. Start the local server using the following command:
 ``` python
 uvicorn main:app --reload
 ```
-6. Accessing the API
-Use the provided API endpoints as documented earlier to interact with the application.
-
-Ensure you have the appropriate permissions and credentials set up for accessing Google Cloud resources.
-Refer to the project documentation for additional details or troubleshooting steps.
+5. Accessing the API
+Visit [http://localhost:8000](http://localhost:8000) in your browser or use tools like Postman to interact with the API. 
 
 # Deploying the Application to Cloud Run
 ``` bash # Cloning the Repository
