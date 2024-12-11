@@ -154,30 +154,23 @@ async def get_product_detail(
             )
 
         # Format response
-        response = [
-            ProductDetailResponse(
-            Id_Products=product.Id_Products,
-            nama_product=product.nama_product,
-            merk=product.merk,
-            jenis_product=product.jenis,
-            kategori=product.kategori,
-            jenis_kulit=product.jenis_kulit,
-            url_gambar=f"{CLOUD_BUCKET_BASE_URL}{product.nama_gambar}" if product.nama_gambar else None,
-            key_ingredients=product.key_ingredients,
-            ingredients=product.ingredients,
-            deskripsi=product.deskripsi,
-            no_BPOM=product.no_BPOM,
-            kegunaan=product.kegunaan
-        ).dict()
-            
-        ]
+        response = {
+            "Id_Products":product.Id_Products,
+            "nama_product":product.nama_product,
+            "merk":product.merk,
+            "jenis_product":product.jenis,
+            "kategori":product.kategori,
+            "jenis_kulit":product.jenis_kulit,
+            "url_gambar":f"{CLOUD_BUCKET_BASE_URL}{product.nama_gambar}" if product.nama_gambar else None,
+            "key_ingredients":product.key_ingredients,
+            "ingredients":product.ingredients,
+            "deskripsi":product.deskripsi,
+            "no_BPOM":product.no_BPOM,
+            "kegunaan":product.kegunaan
+        }
         # Buat respons dasar
         base_response = create_response(200, "Products fetched successfully", response)
 
-        # Sesuaikan nama kunci "list" menjadi "Productlist" jika ada
-        if "list" in base_response:
-            base_response["Productlist"] = base_response.pop("list")
-        # Convert response to dict before returning
         return JSONResponse(
             status_code=200,
             content=base_response 

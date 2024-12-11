@@ -170,6 +170,7 @@ async def login_user(payload: LoginSchema, db: Session = Depends(get_db)):
     login_result = {
         "userId": user.Users_ID,
         "name": user.Username,
+        "email": user.Email,
         "token": access_token
     }
 
@@ -277,21 +278,24 @@ def delete_account(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    # Cek apakah pengguna ada
+    # Cari pengguna
     user = db.query(User).filter(User.Users_ID == current_user.Users_ID).first()
     if not user:
         return create_response(
             status_code=404,
-            message="User not found",
+            message="User not found"
         )
 
     # Validasi password
     if not verify_password(request.password, user.Password):
         return create_response(
             status_code=403,
-            message="Invalid password",
+            message="Invalid password"
         )
 
+    # Hapus semua notes terkait
+    db.query(Notes).filter(Notes.users_id == user.Users_ID).delete()
+    
     # Hapus akun
     db.delete(user)
     db.commit()
@@ -299,8 +303,9 @@ def delete_account(
     return create_response(
         status_code=200,
         message="Account deleted successfully",
-        data={"user_id": user.Users_ID},  # Mengembalikan user ID yang benar
+        data={"user_id": user.Users_ID}
     )
+
 
 
 # =======================

@@ -1,10 +1,10 @@
-import re
 from sqlalchemy.orm import Session
 from models import User
 from utils import hash_password
 from typing import Optional, List, Dict
 
-
+import re
+from sqlalchemy.orm import Session
 
 def generate_user_id(db: Session) -> str:
     # Query the current highest User_ID (assumes it's in format 'USR' followed by digits)
